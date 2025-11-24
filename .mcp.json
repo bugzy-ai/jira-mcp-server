@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "jira": {
+      "command": "node",
+      "args": [
+        "dist/index.js"
+      ],
+      "env": {
+        "JIRA_BASE_URL": "http://localhost:8080",
+        "JIRA_AUTH_TYPE": "pat",
+        "JIRA_USERNAME": "admin",
+        "JIRA_PAT": "${JIRA_PAT}"
+      }
+    }
+  }
+}

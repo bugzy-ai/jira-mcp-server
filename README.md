@@ -148,6 +148,14 @@ Add a comment to an existing issue.
 
 ## Development
 
+### Prerequisites
+
+- Node.js 20+
+- Docker (for local Jira instance)
+- 6GB+ RAM available for Docker
+
+### Quick Start
+
 ```bash
 # Clone the repository
 git clone https://github.com/bugzy-ai/jira-mcp-server.git
@@ -159,8 +167,64 @@ npm install
 # Build
 npm run build
 
-# Run locally
-npm start
+# Setup local Jira (Docker)
+npm run setup
+```
+
+### Local Jira Setup
+
+The setup script will:
+1. Start a Jira Docker container
+2. Wait for Jira to be ready (~3-5 minutes on first boot)
+3. Guide you through manual setup (license + admin user)
+4. Create a TEST project for development
+5. Generate a `.env` file with local credentials
+
+**First run requires manual steps:**
+1. Open http://localhost:8080 in your browser
+2. Complete the setup wizard
+3. Get a [free evaluation license](https://my.atlassian.com/license/evaluation) or [timebomb license](https://developer.atlassian.com/platform/marketplace/timebomb-licenses-for-testing-server-apps/)
+4. Create admin user (recommended: `admin`/`admin`)
+5. Run `npm run setup` again to create test project
+
+### Testing
+
+**With MCP Inspector (debug individual tools):**
+```bash
+npm run dev
+# Opens browser at http://localhost:6274
+```
+
+**With Claude Code (test in conversation):**
+1. The project includes a `.mcp.json` that configures the local server
+2. Restart Claude Code to pick up the config
+3. Try: "Search for issues in the TEST project"
+
+### Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run build` | Build TypeScript to dist/ |
+| `npm run build:watch` | Build with watch mode |
+| `npm run dev` | Run MCP Inspector |
+| `npm run setup` | Setup local Jira Docker |
+| `npm start` | Run the MCP server |
+| `npm run clean` | Remove dist/ |
+
+### Docker Commands
+
+```bash
+# View Jira logs
+docker logs jira-mcp-test
+
+# Stop Jira
+docker stop jira-mcp-test
+
+# Start Jira
+docker start jira-mcp-test
+
+# Remove container (loses data)
+docker rm -f jira-mcp-test
 ```
 
 ## License

@@ -12,8 +12,11 @@
   ],
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
+    "build:watch": "tsc --project tsconfig.build.json --watch",
     "clean": "shx rm -rf dist",
+    "dev": "npx @modelcontextprotocol/inspector dist/index.js",
     "prepublishOnly": "npm run clean && npm run build",
+    "setup": "./scripts/setup-local-jira.sh",
     "start": "node dist/index.js"
   },
   "keywords": [
