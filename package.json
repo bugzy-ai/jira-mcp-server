@@ -1,0 +1,43 @@
+{
+  "name": "@bugzy-ai/jira-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for Jira Server (on-premise) integration",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "jira-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "clean": "shx rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "jira",
+    "jira-server",
+    "model-context-protocol",
+    "ai",
+    "claude"
+  ],
+  "author": "Bugzy AI",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "dotenv": "^16.4.7",
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.3",
+    "shx": "^0.3.4",
+    "typescript": "^5.3.2"
+  }
+}
