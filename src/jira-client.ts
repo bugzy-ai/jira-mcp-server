@@ -85,27 +85,43 @@ export class JiraClient {
 
     if (!response.ok) {
       let errorData: JiraErrorResponse | undefined;
+      let message: string;
+
       try {
         errorData = JSON.parse(responseText) as JiraErrorResponse;
         logger.error("[JiraClient]", "ERROR RESPONSE BODY:", errorData);
+
+        // Handle new format: { "status-code": 404, "message": "..." }
+        if (errorData?.message) {
+          message = errorData.message;
+        } else {
+          // Handle legacy format: { errorMessages: [], errors: {} }
+          const errorMessages = [
+            ...(errorData?.errorMessages || []),
+            ...Object.entries(errorData?.errors || {}).map(
+              ([field, msg]) => `${field}: ${msg}`
+            ),
+          ];
+          message =
+            errorMessages.length > 0
+              ? errorMessages.join("; ")
+              : `HTTP ${response.status}: ${response.statusText}`;
+        }
       } catch {
-        // Response body is not JSON
+        // Response body is not JSON - include snippet for context
         logger.error("[JiraClient]", "ERROR RESPONSE: Non-JSON body");
+        const snippet = responseText.slice(0, 200).replace(/\s+/g, " ").trim();
+        message = snippet
+          ? `HTTP ${response.status}: ${snippet}${responseText.length > 200 ? "..." : ""}`
+          : `HTTP ${response.status}: ${response.statusText}`;
       }
 
-      const errorMessages = [
-        ...(errorData?.errorMessages || []),
-        ...Object.entries(errorData?.errors || {}).map(
-          ([field, msg]) => `${field}: ${msg}`
-        ),
-      ];
+      // Always prefix with status code for clarity
+      const finalMessage = message.startsWith("HTTP ")
+        ? message
+        : `HTTP ${response.status}: ${message}`;
 
-      const message =
-        errorMessages.length > 0
-          ? errorMessages.join("; ")
-          : `HTTP ${response.status}: ${response.statusText}`;
-
-      throw new JiraClientError(message, response.status, errorData);
+      throw new JiraClientError(finalMessage, response.status, errorData);
     }
 
     // Handle 204 No Content

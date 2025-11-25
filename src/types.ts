@@ -118,8 +118,13 @@ export interface JiraCreateIssueResponse {
 }
 
 export interface JiraErrorResponse {
+  // Legacy format
   errorMessages?: string[];
   errors?: Record<string, string>;
+  status?: number;
+  // New format (newer Jira endpoints)
+  "status-code"?: number;
+  message?: string;
 }
 
 export interface CreateIssueFields {
