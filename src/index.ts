@@ -19,6 +19,7 @@ import {
   AddCommentSchema,
 } from "./schemas.js";
 import type { JiraConfig } from "./types.js";
+import { logger } from "./logger.js";
 
 function getConfig(): JiraConfig {
   const baseUrl = process.env.JIRA_BASE_URL;
@@ -82,11 +83,18 @@ const TOOLS = [
 async function main() {
   let jiraClient: JiraClient;
 
+  logger.log("[MCP]", "Starting Jira MCP Server...");
+
   try {
     const config = getConfig();
+    logger.log("[MCP]", "Configuration loaded:", {
+      baseUrl: config.baseUrl,
+      authType: config.auth.type,
+    });
     jiraClient = new JiraClient(config);
     console.error("[Jira MCP] Configuration loaded successfully");
   } catch (error) {
+    logger.error("[MCP]", "Configuration error:", (error as Error).message);
     console.error("[Jira MCP] Configuration error:", (error as Error).message);
     process.exit(1);
   }
@@ -110,6 +118,9 @@ async function main() {
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
 
+    logger.log("[MCP]", `TOOL CALL: ${name}`);
+    logger.log("[MCP]", "TOOL ARGS:", args);
+
     try {
       switch (name) {
         case "jira_search_issues": {
@@ -118,6 +129,7 @@ async function main() {
             maxResults: input.maxResults,
             fields: input.fields,
           });
+          logger.log("[MCP]", `TOOL RESULT (${name}): success, ${result.issues?.length || 0} issues found`);
           return {
             content: [
               {
@@ -134,6 +146,7 @@ async function main() {
             fields: input.fields,
             expand: input.expand,
           });
+          logger.log("[MCP]", `TOOL RESULT (${name}): success, issue ${result.key}`);
           return {
             content: [
               {
@@ -156,6 +169,7 @@ async function main() {
             labels: input.labels,
             components: input.components?.map((name) => ({ name })),
           });
+          logger.log("[MCP]", `TOOL RESULT (${name}): success, created ${result.key}`);
           return {
             content: [
               {
@@ -173,6 +187,7 @@ async function main() {
             input.body,
             input.visibility
           );
+          logger.log("[MCP]", `TOOL RESULT (${name}): success, comment added`);
           return {
             content: [
               {
@@ -184,10 +199,15 @@ async function main() {
         }
 
         default:
+          logger.error("[MCP]", `Unknown tool requested: ${name}`);
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
     } catch (error) {
       if (error instanceof JiraClientError) {
+        logger.error("[MCP]", `TOOL ERROR (${name}): JiraClientError - ${error.message}`, {
+          statusCode: error.statusCode,
+          jiraErrors: error.jiraErrors,
+        });
         return {
           content: [
             {
@@ -199,11 +219,13 @@ async function main() {
         };
       }
       if (error instanceof McpError) {
+        logger.error("[MCP]", `TOOL ERROR (${name}): McpError - ${error.message}`);
         throw error;
       }
       // Zod validation errors or other errors
       const message =
         error instanceof Error ? error.message : "Unknown error occurred";
+      logger.error("[MCP]", `TOOL ERROR (${name}): ${message}`, error);
       return {
         content: [
           {
@@ -219,6 +241,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
+  logger.log("[MCP]", "Server connected to stdio transport");
   console.error("[Jira MCP] Server running on stdio");
 }
 

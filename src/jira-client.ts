@@ -7,6 +7,7 @@ import type {
   JiraErrorResponse,
   CreateIssueFields,
 } from "./types.js";
+import { logger } from "./logger.js";
 
 export class JiraClientError extends Error {
   constructor(
@@ -62,16 +63,34 @@ export class JiraClient {
       options.body = JSON.stringify(body);
     }
 
-    console.error(`[Jira] ${method} ${endpoint}`);
+    logger.log("[JiraClient]", `REQUEST: ${method} ${url}`);
+    if (body) {
+      logger.log("[JiraClient]", "REQUEST BODY:", body);
+    }
 
-    const response = await fetch(url, options);
+    let response: Response;
+    try {
+      response = await fetch(url, options);
+    } catch (fetchError) {
+      logger.error("[JiraClient]", "FETCH ERROR:", fetchError);
+      throw fetchError;
+    }
+
+    logger.log("[JiraClient]", `RESPONSE: ${response.status} ${response.statusText}`);
+    logger.log("[JiraClient]", "RESPONSE HEADERS:", Object.fromEntries(response.headers.entries()));
+
+    // Clone response so we can read body twice if needed
+    const responseText = await response.text();
+    logger.log("[JiraClient]", "RESPONSE BODY RAW:", responseText.substring(0, 2000));
 
     if (!response.ok) {
       let errorData: JiraErrorResponse | undefined;
       try {
-        errorData = (await response.json()) as JiraErrorResponse;
+        errorData = JSON.parse(responseText) as JiraErrorResponse;
+        logger.error("[JiraClient]", "ERROR RESPONSE BODY:", errorData);
       } catch {
         // Response body is not JSON
+        logger.error("[JiraClient]", "ERROR RESPONSE: Non-JSON body");
       }
 
       const errorMessages = [
@@ -90,11 +109,12 @@ export class JiraClient {
     }
 
     // Handle 204 No Content
-    if (response.status === 204) {
+    if (response.status === 204 || !responseText) {
       return {} as T;
     }
 
-    return response.json() as Promise<T>;
+    const responseData = JSON.parse(responseText) as T;
+    return responseData;
   }
 
   /**

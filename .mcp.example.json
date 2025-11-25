@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "jira": {
+      "command": "mcp-tunnel",
+      "args": [
+        "--server",
+        "jira-mcp-server"
+      ],
+      "env": {
+        "ABLY_API_KEY": "${ABLY_API_KEY}",
+        "TENANT_ID": "${TENANT_ID}",
+        "JIRA_BASE_URL": "${JIRA_BASE_URL}",
+        "JIRA_AUTH_TYPE": "${JIRA_AUTH_TYPE}",
+        "JIRA_PAT": "${JIRA_PAT}",
+        "JIRA_USERNAME": "${JIRA_USERNAME}",
+        "JIRA_PASSWORD": "${JIRA_PASSWORD}"
+      }
+    }
+  }
+}
