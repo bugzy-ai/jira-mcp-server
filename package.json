@@ -29,6 +29,14 @@
   ],
   "author": "Bugzy AI",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bugzy-ai/jira-mcp-server.git"
+  },
+  "homepage": "https://github.com/bugzy-ai/jira-mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/bugzy-ai/jira-mcp-server/issues"
+  },
   "engines": {
     "node": ">=20.0.0"
   },
